@@ -13,7 +13,13 @@ export function render(data)
 			i += 2
 			j = i
 			i = data:find("%}", i, true)
-			code ..= data:sub(j, i - 1).."\n"
+			local app = data:sub(j, i - 1):strip()
+			if app:sub(1, 3) == "if " and app:sub(-4) ~= "then" then
+				app ..= " then"
+			elseif app == "endif" then
+				app = "end"
+			end
+			code ..= app.."\n"
 			i += 2
 		elseif data[i + 1] == "{" then
 			code ..= "output ..= [["..data:sub(j, i - 1).."]]\n"
