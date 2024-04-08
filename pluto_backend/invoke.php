@@ -18,24 +18,51 @@ int fflush(FILE* stream);
 EOC, "libc.so.6");
 $glibc->freopen($output_file, "w", $glibc->stdout);
 
-// Load Lua/Pluto and run our code.
+// Load Pluto.
 $lib = FFI::cdef(<<<EOC
 typedef void lua_State;
 lua_State *(luaL_newstate) (void);
 void (luaL_openlibs) (lua_State *L);
 int (luaL_loadstring) (lua_State *L, const char *s);
 void  (lua_callk) (lua_State *L, int nargs, int nresults, void *ctx, void *k);
+void        (lua_pushinteger) (lua_State *L, long long n);
 const char *(lua_pushlstring) (lua_State *L, const char *s, size_t len);
 void  (lua_createtable) (lua_State *L, int narr, int nrec);
+
+void  (lua_settop) (lua_State *L, int idx);
 
 void  (lua_setglobal) (lua_State *L, const char *name);
 void  (lua_settable) (lua_State *L, int idx);
 EOC, __DIR__."/libPluto.so"); // Must be a C ABI build (-DPLUTO_C_LINKAGE)
-
 $nullptr = $lib->cast("void*", 0);
 
+// Create new lua_State
 $lua = $lib->luaL_newstate();
 $lib->luaL_openlibs($lua);
+
+// Utility functions
+if (!function_exists("array_is_list"))
+{
+	// Added in PHP 8.1.
+	function array_is_list(array $array): bool
+	{
+		$i = 0;
+		foreach ($array as $k => $v)
+		{
+			if ($k !== $i++)
+			{
+				return false;
+			}
+		}
+		return true;
+	}
+}
+
+function pop($L, $n)
+{
+	global $lib;
+	$lib->lua_settop($L, -($n)-1);
+}
 
 function pushstring($L, $str)
 {
@@ -43,12 +70,76 @@ function pushstring($L, $str)
 	$lib->lua_pushlstring($L, $str, strlen($str));
 }
 
-$lib->lua_createtable($lua, 0, 0);
-pushstring($lua, "REQUEST_URI");
-pushstring($lua, $_SERVER["REQUEST_URI"]);
-$lib->lua_settable($lua, -3);
-$lib->lua_setglobal($lua, "_SERVER");
+function push($L, $val)
+{
+	global $lib;
+	if (is_array($val))
+	{
+		$lib->lua_createtable($L, 0, 0);
+		if (array_is_list($val))
+		{
+			foreach ($val as $k => $v)
+			{
+				if (push($L, $k + 1))
+				{
+					if (push($L, $v))
+					{
+						$lib->lua_settable($L, -3);
+					}
+					else
+					{
+						pop($L, 1);
+					}
+				}
+			}
+		}
+		else
+		{
+			foreach ($val as $k => $v)
+			{
+				if (push($L, $k))
+				{
+					if (push($L, $v))
+					{
+						$lib->lua_settable($L, -3);
+					}
+					else
+					{
+						pop($L, 1);
+					}
+				}
+			}
+		}
+		return 1;
+	}
+	else if (is_string($val))
+	{
+		pushstring($L, $val);
+		return 1;
+	}
+	else if (is_int($val))
+	{
+		$lib->lua_pushinteger($L, $val);
+		return 1;
+	}
+	return 0;
+}
 
+// Push globals
+if (push($lua, $_SERVER))
+{
+	$lib->lua_setglobal($lua, "_SERVER");
+}
+if (push($lua, $_GET))
+{
+	$lib->lua_setglobal($lua, "_GET");
+}
+if (push($lua, $_POST))
+{
+	$lib->lua_setglobal($lua, "_POST");
+}
+
+// Run code
 if (substr($_SERVER["REDIRECT_INVOKE_FILENAME"], -6) == ".plutw")
 {
 	$lib->luaL_loadstring($lua, file_get_contents(__DIR__."/plutw-handler.pluto"));
