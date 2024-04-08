@@ -26,7 +26,9 @@
 
 ## What is .plutw?
 
-This is a preliminary file extension to indicate the file should be processed by [pluto-templating-engine](https://github.com/PlutoLang/pluto-templating-engine), allowing for _code_ like this:
+This file extension indicates that the file should be processed by [pluto-templating-engine](https://github.com/PlutoLang/pluto-templating-engine), allowing for _code_ like this:
 ```twig
 <p>Hello from {{ _SERVER.REQUEST_URI }}</p>
 ```
+
+See also: [example.plutw](example.plutw).

@@ -1,0 +1,8 @@
+{% if _GET.name then %}
+	<p>Hello there, {{ _GET.name }}!</p>
+{% else %}
+	<form>
+		<input type="text" name="name" placeholder="Enter your name" />
+		<input type="submit" />
+	</form>
+{% end %}
