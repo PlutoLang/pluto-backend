@@ -14,6 +14,7 @@ $glibc = FFI::cdef(<<<EOC
 typedef void FILE;
 FILE* stdout;
 FILE* freopen(const char* filename, const char* mode, FILE* stream);
+int fflush(FILE* stream);
 EOC, "libc.so.6");
 $glibc->freopen($output_file, "w", $glibc->stdout);
 
@@ -62,4 +63,5 @@ else
 }
 
 // Print whatever was written to STDOUT.
+$glibc->fflush($glibc->stdout);
 echo file_get_contents($output_file);
