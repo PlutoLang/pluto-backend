@@ -1,0 +1,34 @@
+-- https://github.com/PlutoLang/pluto-templating-engine
+
+export function render(data)
+	local code = "local output = \"\"\n"
+	local j = 1
+	local i = 1
+	while true do
+		j = i
+		i = data:find("{", i, true)
+		if i == nil then break end
+		if data[i + 1] == "%" then
+			code ..= "output ..= [["..data:sub(j, i - 1).."]]\n"
+			i += 2
+			j = i
+			i = data:find("%}", i, true)
+			code ..= data:sub(j, i - 1).."\n"
+			i += 2
+		elseif data[i + 1] == "{" then
+			code ..= "output ..= [["..data:sub(j, i - 1).."]]\n"
+			i += 2
+			j = i
+			i = data:find("}}", i + 1, true)
+			code ..= "output ..= "..data:sub(j, i - 1).."\n"
+			i += 2
+		else
+			++i
+		end
+	end
+	if j ~= #data + 1 then
+		code ..= "output ..= [["..data:sub(j).."]]\n"
+	end
+	code ..= "return output"
+	return load(code)()
+end
