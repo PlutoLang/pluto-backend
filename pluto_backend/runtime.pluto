@@ -6,6 +6,7 @@ return function(code)
 	xpcall(function()
 		if _SERVER.REDIRECT_INVOKE_FILENAME:sub(-6) == ".plutw" then
 			local TE = require "templating-engine"
+			io.currentdir(io.part(_SERVER.REDIRECT_INVOKE_FILENAME, "parent"))
 			local str, err = TE.render(code)
 			if str then
 				io.write(str)
@@ -13,6 +14,7 @@ return function(code)
 				print_error(err)
 			end
 		else
+			io.currentdir(io.part(_SERVER.REDIRECT_INVOKE_FILENAME, "parent"))
 			local chunk, err = load(code, _SERVER.REDIRECT_INVOKE_FILENAME)
 			if chunk then
 				chunk()
