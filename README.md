@@ -15,8 +15,10 @@
 	RewriteRule ^(.*)$ /pluto_backend/invoke.php [E=INVOKE_FILENAME:%{REQUEST_FILENAME}.pluto]
 	RewriteCond %{REQUEST_FILENAME}\.plutw -f
 	RewriteRule ^(.*)$ /pluto_backend/invoke.php [E=INVOKE_FILENAME:%{REQUEST_FILENAME}.plutw]
+	RewriteCond %{REQUEST_FILENAME} -d
 	RewriteCond %{REQUEST_FILENAME}index\.pluto -f
 	RewriteRule ^(.*)$ /pluto_backend/invoke.php [E=INVOKE_FILENAME:%{REQUEST_FILENAME}index.pluto]
+	RewriteCond %{REQUEST_FILENAME} -d
 	RewriteCond %{REQUEST_FILENAME}index\.plutw -f
 	RewriteRule ^(.*)$ /pluto_backend/invoke.php [E=INVOKE_FILENAME:%{REQUEST_FILENAME}index.plutw]
 </Directory>
