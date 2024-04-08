@@ -1,0 +1,26 @@
+local function print_error(err)
+	io.write("<pre>"..(err:gsub("<", "&lt;"):gsub(">", "&gt;")).."</pre>")
+end
+
+return function(code)
+	xpcall(function()
+		if _SERVER.REDIRECT_INVOKE_FILENAME:sub(-6) == ".plutw" then
+			local TE = require "templating-engine"
+			local str, err = TE.render(code)
+			if str then
+				io.write(str)
+			else
+				print_error(err)
+			end
+		else
+			local chunk, err = load(code, _SERVER.REDIRECT_INVOKE_FILENAME)
+			if chunk then
+				chunk()
+			else
+				print_error(err)
+			end
+		end
+	end, function(e)
+		print_error(debug.traceback(e, 2))
+	end)
+end

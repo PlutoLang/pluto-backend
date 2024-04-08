@@ -1,4 +1,0 @@
-local TE = require "templating-engine"
-return function(code)
-	io.write(TE.render(code))
-end

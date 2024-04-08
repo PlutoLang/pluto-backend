@@ -20,7 +20,7 @@ export function render(data)
 			i += 2
 			j = i
 			i = data:find("}}", i + 1, true)
-			code ..= "output ..= "..data:sub(j, i - 1).."\n"
+			code ..= "output ..= ("..data:sub(j, i - 1)..")\n"
 			i += 2
 		else
 			++i
@@ -30,5 +30,9 @@ export function render(data)
 		code ..= "output ..= [["..data:sub(j).."]]\n"
 	end
 	code ..= "return output"
-	return load(code)()
+	local chunk, err = load(code)
+	if chunk then
+		return chunk()
+	end
+	return nil, err
 end

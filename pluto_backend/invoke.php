@@ -23,13 +23,15 @@ $lib = FFI::cdef(<<<EOC
 typedef void lua_State;
 lua_State *(luaL_newstate) (void);
 void (luaL_openlibs) (lua_State *L);
-int (luaL_loadstring) (lua_State *L, const char *s);
+int (luaL_loadbufferx) (lua_State *L, const char *buff, size_t sz, const char *name, const char *mode);
 void  (lua_callk) (lua_State *L, int nargs, int nresults, void *ctx, void *k);
 void        (lua_pushinteger) (lua_State *L, long long n);
 const char *(lua_pushlstring) (lua_State *L, const char *s, size_t len);
 void  (lua_createtable) (lua_State *L, int narr, int nrec);
 
 void  (lua_settop) (lua_State *L, int idx);
+
+int (lua_getglobal) (lua_State *L, const char *name);
 
 void  (lua_setglobal) (lua_State *L, const char *name);
 void  (lua_settable) (lua_State *L, int idx);
@@ -140,18 +142,11 @@ if (push($lua, $_POST))
 }
 
 // Run code
-if (substr($_SERVER["REDIRECT_INVOKE_FILENAME"], -6) == ".plutw")
-{
-	$lib->luaL_loadstring($lua, file_get_contents(__DIR__."/plutw-handler.pluto"));
-	$lib->lua_callk($lua, 0, 1, $nullptr, $nullptr);
-	pushstring($lua, $code);
-	$lib->lua_callk($lua, 1, 0, $nullptr, $nullptr);
-}
-else
-{
-	$lib->luaL_loadstring($lua, $code);
-	$lib->lua_callk($lua, 0, 0, $nullptr, $nullptr);
-}
+$runtime = file_get_contents(__DIR__."/runtime.pluto");
+$lib->luaL_loadbufferx($lua, $runtime, strlen($runtime), "pluto-backend runtime", $nullptr);
+$lib->lua_callk($lua, 0, 1, $nullptr, $nullptr);
+pushstring($lua, $code);
+$lib->lua_callk($lua, 1, 0, $nullptr, $nullptr);
 
 // Print whatever was written to STDOUT.
 $glibc->fflush($glibc->stdout);
