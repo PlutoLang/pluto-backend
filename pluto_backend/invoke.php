@@ -21,12 +21,15 @@ $glibc->freopen($output_file, "w", $glibc->stdout);
 // Load Pluto.
 $lib = FFI::cdef(<<<EOC
 typedef void lua_State;
+typedef int (*lua_CFunction) (lua_State *L);
+
 lua_State *(luaL_newstate) (void);
 void (luaL_openlibs) (lua_State *L);
 int (luaL_loadbufferx) (lua_State *L, const char *buff, size_t sz, const char *name, const char *mode);
 void  (lua_callk) (lua_State *L, int nargs, int nresults, void *ctx, void *k);
 void        (lua_pushinteger) (lua_State *L, long long n);
 const char *(lua_pushlstring) (lua_State *L, const char *s, size_t len);
+void  (lua_pushcclosure) (lua_State *L, lua_CFunction fn, int n);
 void  (lua_createtable) (lua_State *L, int narr, int nrec);
 
 void  (lua_settop) (lua_State *L, int idx);
@@ -35,6 +38,8 @@ int (lua_getglobal) (lua_State *L, const char *name);
 
 void  (lua_setglobal) (lua_State *L, const char *name);
 void  (lua_settable) (lua_State *L, int idx);
+
+const char *(luaL_checklstring) (lua_State *L, int arg, size_t *l);
 EOC, __DIR__."/libPluto.so"); // Must be a C ABI build (-DPLUTO_C_LINKAGE)
 $nullptr = $lib->cast("void*", 0);
 
@@ -140,6 +145,14 @@ if (push($lua, $_POST))
 {
 	$lib->lua_setglobal($lua, "_POST");
 }
+
+// Push functions
+$lib->lua_pushcclosure($lua, function($L)
+{
+	global $lib, $nullptr;
+	header($lib->luaL_checklstring($L, 1, $nullptr));
+}, 0);
+$lib->lua_setglobal($lua, "header");
 
 // Run code
 $runtime = file_get_contents(__DIR__."/runtime.pluto");
