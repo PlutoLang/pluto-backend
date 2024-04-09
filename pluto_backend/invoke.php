@@ -40,7 +40,7 @@ void  (lua_setglobal) (lua_State *L, const char *name);
 void  (lua_settable) (lua_State *L, int idx);
 
 const char *(luaL_checklstring) (lua_State *L, int arg, size_t *l);
-EOC, __DIR__."/libPluto.so"); // Must be a C ABI build (-DPLUTO_C_LINKAGE)
+EOC, __DIR__."/libplutocabi.so");
 $nullptr = $lib->cast("void*", 0);
 
 // Create new lua_State
