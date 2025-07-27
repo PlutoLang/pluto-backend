@@ -24,6 +24,7 @@ typedef void lua_State;
 typedef int (*lua_CFunction) (lua_State *L);
 
 lua_State *(luaL_newstate) (void);
+void (lua_close) (lua_State *L);
 void (luaL_openlibs) (lua_State *L);
 int (luaL_loadbufferx) (lua_State *L, const char *buff, size_t sz, const char *name, const char *mode);
 void  (lua_callk) (lua_State *L, int nargs, int nresults, void *ctx, void *k);
@@ -160,6 +161,7 @@ $lib->luaL_loadbufferx($lua, $runtime, strlen($runtime), "pluto-backend runtime"
 $lib->lua_callk($lua, 0, 1, $nullptr, $nullptr);
 pushstring($lua, $code);
 $lib->lua_callk($lua, 1, 0, $nullptr, $nullptr);
+$lib->lua_close($lua);
 
 // Print whatever was written to STDOUT.
 $glibc->fflush($glibc->stdout);
